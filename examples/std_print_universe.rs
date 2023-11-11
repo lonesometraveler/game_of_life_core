@@ -1,4 +1,4 @@
-use game_of_life_core::{Cell, Universe};
+use game_of_life_core::{Cell, State, Universe};
 
 const WIDTH: usize = 24;
 const HEIGHT: usize = 16;
@@ -18,9 +18,9 @@ fn seed(universe: &mut Universe<WIDTH, HEIGHT>) {
     for (r_index, row) in universe.grid().iter().enumerate() {
         for (c_index, _cell) in row.iter().enumerate() {
             if rand::random() {
-                universe.set_cell(r_index, c_index, Cell::Alive);
+                universe.set_cell(r_index, c_index, State::Alive);
             } else {
-                universe.set_cell(r_index, c_index, Cell::Dead);
+                universe.set_cell(r_index, c_index, State::Dead);
             };
         }
     }
@@ -40,8 +40,9 @@ fn print_generation(index: usize, matrix: &Universe<WIDTH, HEIGHT>) {
 
 // Convert Cell to String
 fn cell_to_string(cell: Cell) -> String {
-    match cell {
-        Cell::Dead => "-".to_string(),
-        Cell::Alive => "*".to_string(),
+    if cell.is_alive() {
+        "*".to_string()
+    } else {
+        "-".to_string()
     }
 }
