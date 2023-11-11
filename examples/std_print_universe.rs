@@ -31,7 +31,7 @@ fn print_generation(index: usize, matrix: &Universe<WIDTH, HEIGHT>) {
     println!("Generation: {}", index);
     for row in matrix.grid() {
         for cell in row {
-            print!("{} ", cell_to_string(cell));
+            print!("{} ", cell_to_string(&cell));
         }
         println!();
     }
@@ -39,7 +39,7 @@ fn print_generation(index: usize, matrix: &Universe<WIDTH, HEIGHT>) {
 }
 
 // Convert Cell to String
-fn cell_to_string(cell: Cell) -> String {
+fn cell_to_string(cell: &Cell) -> String {
     if cell.is_alive() {
         "*".to_string()
     } else {
