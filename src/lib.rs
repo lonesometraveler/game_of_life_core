@@ -9,6 +9,7 @@ pub enum State {
     Alive,
 }
 
+/// Cell
 #[bitfield(bits = 8)]
 #[derive(Clone, Copy, Debug, PartialEq, Eq)]
 pub struct Cell {
@@ -17,6 +18,7 @@ pub struct Cell {
 }
 
 impl Cell {
+    /// Sets a new state for the cell based on the current state and live neighbors
     fn evolve(&mut self) {
         let state = match (self.state(), self.live_neighbors()) {
             (State::Dead, 3) => State::Alive,
@@ -26,6 +28,7 @@ impl Cell {
         self.set_state(state);
     }
 
+    /// Returns true if the cell is alive
     pub fn is_alive(&self) -> bool {
         self.state() == State::Alive
     }
@@ -37,7 +40,7 @@ impl Default for Cell {
     }
 }
 
-/// The Universe
+/// The Universe with a fixed width and height
 pub struct Universe<const W: usize, const H: usize> {
     grid: [[Cell; W]; H],
     height: usize,
@@ -53,14 +56,17 @@ impl<const W: usize, const H: usize> Universe<W, H> {
         }
     }
 
-    pub fn grid(&self) -> [[Cell; W]; H] {
-        self.grid
+    /// Returns the reference to the grid
+    pub fn grid(&self) -> &[[Cell; W]; H] {
+        &self.grid
     }
 
+    /// Sets the state of the cell
     pub fn set_cell(&mut self, row: usize, column: usize, state: State) {
         self.grid[row][column].set_state(state);
     }
 
+    /// Evolves the universe
     pub fn evolve(&mut self) {
         for row in 0..self.height {
             for column in 0..self.width {
@@ -96,7 +102,8 @@ impl<const W: usize, const H: usize> Universe<W, H> {
     }
 
     // For testing
-    pub fn state_grid(&self) -> [[State; W]; H] {
+    #[allow(dead_code)]
+    fn state_grid(&self) -> [[State; W]; H] {
         let mut states = [[State::Dead; W]; H];
         for (row_index, row) in self.grid.iter().enumerate() {
             for (col_index, cell) in row.iter().enumerate() {
