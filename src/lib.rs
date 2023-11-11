@@ -4,6 +4,7 @@ use modular_bitfield::prelude::*;
 
 /// The state of a Cell
 #[derive(Clone, Copy, Debug, PartialEq, Eq, BitfieldSpecifier)]
+#[bits = 1]
 pub enum State {
     Dead,
     Alive,
@@ -83,20 +84,24 @@ impl<const W: usize, const H: usize> Universe<W, H> {
     }
 
     fn live_neighbor_count(&self, row: usize, column: usize) -> u8 {
-        let mut count = 0;
-        for &delta_row in [self.height - 1, 0, 1].iter() {
-            for &delta_col in [self.width - 1, 0, 1].iter() {
-                if delta_row == 0 && delta_col == 0 {
-                    continue;
-                }
-                // Calculate the neighbor's coordinates with wrapping
-                let neighbor_row = (row + delta_row) % self.height;
-                let neighbor_col = (column + delta_col) % self.width;
-
-                count += self.grid[neighbor_row][neighbor_col].state() as u8;
-            }
-        }
-        count
+        [self.height - 1, 0, 1]
+            .iter()
+            .map(|&delta_row| {
+                [self.width - 1, 0, 1]
+                    .iter()
+                    .map(|&delta_col| {
+                        if delta_row == 0 && delta_col == 0 {
+                            0
+                        } else {
+                            // Calculate the neighbor's coordinates with wrapping
+                            let neighbor_row = (row + delta_row) % self.height;
+                            let neighbor_col = (column + delta_col) % self.width;
+                            self.grid[neighbor_row][neighbor_col].state() as u8
+                        }
+                    })
+                    .sum::<u8>()
+            })
+            .sum()
     }
 
     // For testing
