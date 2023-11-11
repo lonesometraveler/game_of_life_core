@@ -57,8 +57,8 @@ impl<const W: usize, const H: usize> Universe<W, H> {
     }
 
     /// Returns the reference to the grid
-    pub fn grid(&self) -> &[[Cell; W]; H] {
-        &self.grid
+    pub fn grid(&self) -> [[Cell; W]; H] {
+        self.grid
     }
 
     /// Sets the state of the cell
@@ -93,9 +93,7 @@ impl<const W: usize, const H: usize> Universe<W, H> {
                 let neighbor_row = (row + delta_row) % self.height;
                 let neighbor_col = (column + delta_col) % self.width;
 
-                if self.grid[neighbor_row][neighbor_col].is_alive() {
-                    count += 1;
-                }
+                count += self.grid[neighbor_row][neighbor_col].state() as u8;
             }
         }
         count
