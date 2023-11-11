@@ -1,41 +1,33 @@
 #![no_std]
 
+use modular_bitfield::prelude::*;
+
 /// The state of a Cell
-#[repr(u8)]
-#[derive(Clone, Copy, Debug, PartialEq, Eq)]
+#[derive(Clone, Copy, Debug, PartialEq, Eq, BitfieldSpecifier)]
 pub enum State {
-    Dead = 0,
-    Alive = 1,
+    Dead,
+    Alive,
 }
 
+#[bitfield(bits = 8)]
 #[derive(Clone, Copy, Debug, PartialEq, Eq)]
 pub struct Cell {
     state: State,
-    live_neighbors: u8,
+    live_neighbors: B7,
 }
 
 impl Cell {
-    fn new() -> Self {
-        Cell {
-            state: State::Dead,
-            live_neighbors: 0,
-        }
-    }
-
     fn evolve(&mut self) {
-        self.state = match (self.state, self.live_neighbors) {
+        let state = match (self.state(), self.live_neighbors()) {
             (State::Dead, 3) => State::Alive,
             (State::Alive, 2) | (State::Alive, 3) => State::Alive,
             _ => State::Dead,
-        }
-    }
-
-    fn set_live_neighbors(&mut self, live_neighbors: u8) {
-        self.live_neighbors = live_neighbors;
+        };
+        self.set_state(state);
     }
 
     pub fn is_alive(&self) -> bool {
-        self.state == State::Alive
+        self.state() == State::Alive
     }
 }
 
@@ -66,7 +58,7 @@ impl<const W: usize, const H: usize> Universe<W, H> {
     }
 
     pub fn set_cell(&mut self, row: usize, column: usize, state: State) {
-        self.grid[row][column].state = state;
+        self.grid[row][column].set_state(state);
     }
 
     pub fn evolve(&mut self) {
@@ -95,7 +87,7 @@ impl<const W: usize, const H: usize> Universe<W, H> {
                 let neighbor_row = (row + delta_row) % self.height;
                 let neighbor_col = (column + delta_col) % self.width;
 
-                if self.grid[neighbor_row][neighbor_col].state == State::Alive {
+                if self.grid[neighbor_row][neighbor_col].is_alive() {
                     count += 1;
                 }
             }
@@ -103,11 +95,12 @@ impl<const W: usize, const H: usize> Universe<W, H> {
         count
     }
 
-    fn state_grid(&self) -> [[State; W]; H] {
+    // For testing
+    pub fn state_grid(&self) -> [[State; W]; H] {
         let mut states = [[State::Dead; W]; H];
         for (row_index, row) in self.grid.iter().enumerate() {
             for (col_index, cell) in row.iter().enumerate() {
-                states[row_index][col_index] = cell.state;
+                states[row_index][col_index] = cell.state();
             }
         }
         states
@@ -137,7 +130,7 @@ mod tests {
         let mut universe = Universe::<3, 3>::new();
 
         // Set the center cell to Alive
-        universe.grid[1][1].state = State::Alive;
+        universe.grid[1][1].set_state(State::Alive);
 
         // No live neighbors
         let count = universe.live_neighbor_count(1, 1);
@@ -148,10 +141,7 @@ mod tests {
     fn test_live_neighbor_count_some_live_neighbors() {
         let mut universe = Universe::<3, 3>::new();
 
-        let live_cell = Cell {
-            state: State::Alive,
-            ..Default::default()
-        };
+        let live_cell = Cell::new().with_state(State::Alive);
 
         // Set some neighboring cells to Alive
         universe.grid[0][0] = live_cell;
@@ -167,11 +157,7 @@ mod tests {
     fn test_live_neighbor_count_wrap_around() {
         let mut universe = Universe::<3, 3>::new();
 
-        let live_cell = Cell {
-            state: State::Alive,
-            ..Default::default()
-        };
-
+        let live_cell = Cell::new().with_state(State::Alive);
         // Set cells near the edges to Alive
         universe.grid[0][0] = live_cell;
         universe.grid[0][2] = live_cell;
@@ -196,10 +182,7 @@ mod tests {
     fn test_evolution_with_mutated_logic_1() {
         let mut universe = Universe::<3, 3>::new();
 
-        let live_cell = Cell {
-            state: State::Alive,
-            ..Default::default()
-        };
+        let live_cell = Cell::new().with_state(State::Alive);
 
         // Set up a scenario where specific evolution behavior is expected
         universe.grid[0][0] = live_cell;
@@ -212,10 +195,7 @@ mod tests {
     fn test_evolution_with_mutated_logic_2() {
         let mut universe = Universe::<4, 4>::new();
 
-        let live_cell = Cell {
-            state: State::Alive,
-            ..Default::default()
-        };
+        let live_cell = Cell::new().with_state(State::Alive);
 
         // Set up a scenario where specific evolution behavior is expected
         universe.grid[0][0] = live_cell;
